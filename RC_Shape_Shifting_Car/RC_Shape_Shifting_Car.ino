@@ -1,16 +1,25 @@
 /*
-  300007_RC_Shape_Shifting_Car
+  300007_RC_Shape_Shifting_Car for Controls
   Created by Jason Swee, April 05, 2018.
 */
 
 #include "Arduino.h"
 #define channel1_pin 1
 #define channel2_pin 2
+#define max_speed 100 
+#define E1 5 //M1 speed control
+#define M1 4 //M1 Directional control
+#define E2 6 //M2 speed control
+#define M2 7 //M2 Directional control
 
 volatile int pwm_value1 = 0;
 volatile int prev_time1 = 0;
 volatile int pwm_value2 = 0;
 volatile int prev_time2 = 0;
+
+int c1 =0;//Left right
+int c2 =0;//Left right
+
 
 unsigned long last_print_time = 0;
 
@@ -27,8 +36,34 @@ void setup()
 void loop() 
 { 
   print_status(1000); 
+  remap();
+  translator();
 }
- 
+void remap()
+{
+  c1 = map(pwm_value1,1100,1900,100,0);//Left Right
+  c2 = map(pwm_value2,1050,1900,100,-100);//Forward Reverse
+}
+void translator()
+{
+  int power = max_speed * abs(c2)/100;
+  int left_power = power * c1 / 100;
+  int right_power = power - left_power;
+  
+  if(c2>0) //Forward
+  {
+    digitalWrite(M1,HIGH);
+    digitalWrite(M2,LOW);
+  }
+  else
+  {
+    digitalWrite(M1,LOW);
+    digitalWrite(M2,HIGH);
+  }
+
+  analogWrite(E1,left_power);
+  analogWrite(E2,right_power);
+}
 void rising1() 
 {
   attachInterrupt(digitalPinToInterrupt(channel1_pin), falling1, FALLING);
@@ -53,11 +88,17 @@ void print_status(int print_every_x_millis)
 {
   if(millis()- last_print_time >= print_every_x_millis)
   {
-    Serial.print("PWM value1: ");
+    Serial.print("Channel 1 PWM value(LR): ");
     Serial.print(pwm_value1);
 
-    Serial.print("     PWM value2: ");
+    Serial.print("  Calibrate 1: ");
+    Serial.print(c1);
+
+    Serial.print("     Channel 2 PWM value(LR): ");
     Serial.print(pwm_value2);
+
+    Serial.print("  Calibrate 2: ");
+    Serial.print(c2);
     
     last_print_time = millis();
     Serial.print("      Time:");

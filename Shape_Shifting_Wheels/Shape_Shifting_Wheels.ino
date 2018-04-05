@@ -24,7 +24,6 @@ int count = 0;
 int desired_spd = 0;
 
 unsigned long last_print_time = 0;
-
 unsigned long last_poll_time = 0;
 int debounce_delay = 10;
   
@@ -35,7 +34,7 @@ void setup()
   Serial.begin(9600);
   Serial.println("Basic Encoder Test:");
 
-  pinMode(encoder_PinA, INPUT);
+  //pinMode(encoder_PinA, INPUT);
   //attachInterrupt(digitalPinToInterrupt(encoder_PinA), pin_ISR, CHANGE);
   
   pinMode(E2, OUTPUT); 
