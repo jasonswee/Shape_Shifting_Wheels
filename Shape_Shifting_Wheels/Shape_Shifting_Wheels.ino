@@ -7,11 +7,11 @@
 #include <Encoder.h> //Encoder library
 
 //Set the encoder pins below
-#define encoder_PinA 2
-#define encoder_PinB 4
-#define pos_to_vel_constant 1
+#define ENCODER_PINA 2
+#define ENCODER_PINB 4
+#define POS_TO_VEL_CONST 1
 
-Encoder myEnc(encoder_PinA, encoder_PinB); //Set pins for encoder
+Encoder myEnc(ENCODER_PINA, ENCODER_PINB); //Set pins for encoder
 
 unsigned long old_time = 0;
 unsigned long new_time = 0;
@@ -19,7 +19,7 @@ unsigned long velocity = 0;
 long encoded_position = 0;
 
 int E2 = 6; //M2 speed control
-int M2 = 7; //M2 speed control
+int M2 = 7; //M2 Directional control
 int count = 0;
 int desired_spd = 0;
 
@@ -34,8 +34,8 @@ void setup()
   Serial.begin(9600);
   Serial.println("Basic Encoder Test:");
 
-  //pinMode(encoder_PinA, INPUT);
-  //attachInterrupt(digitalPinToInterrupt(encoder_PinA), pin_ISR, CHANGE);
+  //pinMode(ENCODER_PINA, INPUT);
+  //attachInterrupt(digitalPinToInterrupt(ENCODER_PINA), pin_ISR, CHANGE);
   
   pinMode(E2, OUTPUT); 
   pinMode(M2, OUTPUT); 
@@ -70,7 +70,7 @@ void poll_motor_spd(int poll_every_x_millis)
   if(millis()-last_poll_time >= poll_every_x_millis)
   {
     encoded_position = myEnc.read();
-    velocity = encoded_position*pos_to_vel_constant/(poll_every_x_millis);
+    velocity = encoded_position*POS_TO_VEL_CONST/(poll_every_x_millis);
     last_poll_time = millis();
     myEnc.write(0);
     delay(debounce_delay);
@@ -102,16 +102,4 @@ void print_status(int print_every_x_millis)
     Serial.println(last_print_time/1000);
   }
 }
-/*
-void pin_ISR() {
-  position = myEnc.read(); // Read encoder position
-  //Serial.print("Encoder Readings:");
-  //Serial.println(position);
-  
-  Serial.print("Time change Readings:");
-  Serial.println(millis()-old_time);
-  
-  //velocity = position*pos_to_vel_constant/(new_time-old_time);
-  //myEnc.write(0); //reset counter
-  //old_time = new_time;
-}*/
+
