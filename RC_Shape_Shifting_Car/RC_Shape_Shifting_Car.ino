@@ -6,7 +6,7 @@
 #include "Arduino.h"
 #define channel1_pin 1
 #define channel2_pin 2
-#define max_speed 100 
+#define max_speed 240 
 #define E1 5 //M1 speed control
 #define M1 4 //M1 Directional control
 #define E2 6 //M2 speed control
@@ -19,6 +19,10 @@ volatile int prev_time2 = 0;
 
 int c1 =0;//Left right
 int c2 =0;//Left right
+
+int power =0;
+int left_power=0;
+int right_power=0;
 
 
 unsigned long last_print_time = 0;
@@ -41,14 +45,17 @@ void loop()
 }
 void remap()
 {
-  c1 = map(pwm_value1,1100,1900,100,0);//Left Right
+  c1 = map(pwm_value1,1100,1900,100,-100);//Left Right
   c2 = map(pwm_value2,1050,1900,100,-100);//Forward Reverse
 }
 void translator()
 {
-  int power = max_speed * abs(c2)/100;
-  int left_power = power * c1 / 100;
-  int right_power = power - left_power;
+  power = max_speed * abs(c2)/100;
+
+  if(c1<=51) c1 = map(c1,0,51,51,0);
+  else C1
+  left_power = power * c1 / 100;
+  right_power = power - left_power;
   
   if(c2>0) //Forward
   {
@@ -88,17 +95,23 @@ void print_status(int print_every_x_millis)
 {
   if(millis()- last_print_time >= print_every_x_millis)
   {
-    Serial.print("Channel 1 PWM value(LR): ");
+    Serial.print("C1 PWM(LR): ");
     Serial.print(pwm_value1);
 
-    Serial.print("  Calibrate 1: ");
+    Serial.print("  Calibrated 1: ");
     Serial.print(c1);
 
-    Serial.print("     Channel 2 PWM value(LR): ");
+    Serial.print("     C2 PWM(LR): ");
     Serial.print(pwm_value2);
 
-    Serial.print("  Calibrate 2: ");
+    Serial.print("  Calibrated 2: ");
     Serial.print(c2);
+
+    Serial.print("  Power left: ");
+    Serial.print(left_power);
+
+    Serial.print("  Power right: ");
+    Serial.print(right_power);
     
     last_print_time = millis();
     Serial.print("      Time:");

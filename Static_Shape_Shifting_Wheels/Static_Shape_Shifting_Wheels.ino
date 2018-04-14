@@ -5,6 +5,10 @@
 
 #include "Arduino.h"
 #include <Encoder.h> //Encoder library
+#include <SoftwareSerial.h>
+
+SoftwareSerial BTSerial(10, 11);
+#define BLUETOOTH_SPEED 9600
 
 //Set the encoder pins below
 #define ENCODER_PINA 2
@@ -44,6 +48,13 @@ void setup()
 
   last_poll_time = millis();
   last_print_time = millis();
+
+  Serial.begin(9600);
+  BTSerial.begin(BLUETOOTH_SPEED);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for Leonardo only
+  }
+  Serial.println("Starting...");
 }
 
 // The loop function is called in an endless loop
@@ -64,6 +75,10 @@ void loop()
 
   
   
+}
+void()
+{
+  receive 
 }
 void poll_motor_spd(int poll_every_x_millis)
 {
