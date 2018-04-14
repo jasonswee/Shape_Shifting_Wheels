@@ -7,7 +7,8 @@
 #include <Encoder.h> //Encoder library
 #include <SoftwareSerial.h>
 
-SoftwareSerial BTSerial(10, 11);
+//Set the Bluetooth pins below
+SoftwareSerial BTSerial(10, 11); //RX,TX
 #define BLUETOOTH_SPEED 9600
 
 //Set the encoder pins below
@@ -15,22 +16,48 @@ SoftwareSerial BTSerial(10, 11);
 #define ENCODER_PINB 4
 #define POS_TO_VEL_CONST 1
 
+//Set the Rain threshold
+#define RAIN_PIN A2
+#define RAIN_THRESHOLD 100
+
+//Set pushbutton pin
+#define PUSH_PIN 5
+
+//Set RGB led 
+
 Encoder myEnc(ENCODER_PINA, ENCODER_PINB); //Set pins for encoder
 
+
+//Encoder reading function
 unsigned long old_time = 0;
 unsigned long new_time = 0;
 unsigned long velocity = 0;
-long encoded_position = 0;
+unsigned long encoded_position = 0;
+unsigned long last_poll_time = 0;
+int debounce_delay = 10;
 
+//Simulated speed function
 int E2 = 6; //M2 speed control
 int M2 = 7; //M2 Directional control
 int count = 0;
 int desired_spd = 0;
 
+//Pump function
+int E1 = 4;//M1 speed control
+int M1 = 5;//M1 Directional control
+
+//Mode to for receiving BT
+int mode = 0;
+
+//Push button
+boolean inflate_check = false;
+
+//Rain module 
+int rain_value = 0;
+
+//Needed for printing time
 unsigned long last_print_time = 0;
-unsigned long last_poll_time = 0;
-int debounce_delay = 10;
-  
+
 //The setup function is called once at startup of the sketch
 void setup()
 {
@@ -44,8 +71,18 @@ void setup()
   pinMode(E2, OUTPUT); 
   pinMode(M2, OUTPUT); 
   digitalWrite(M2,LOW);
-  analogWrite(E2,100);
 
+  //Rain
+  pinMode(RAIN_PIN,OUTPUT);
+
+  //Push
+  pinMode(PUSH_PIN,OUTPUT);
+
+  //Pump
+  pinMode(E1, OUTPUT); 
+  pinMode(M1, OUTPUT); 
+  digitalWrite(M2,LOW);
+  
   last_poll_time = millis();
   last_print_time = millis();
 
@@ -63,9 +100,16 @@ void loop()
 //Add your repeated code here
 
   //Simulate changing speed
-  simulate_motor_spd(true); //Argument is constant speed for true or varying speed for false
+  //Comment off to switch off simulate speed
+  simulate_motor_spd(true); //True to run constant speed or varying speed for false
   
   new_time = millis();
+  
+  //Capture received mode
+  mode = bluetooth_receive();
+
+  //Capture Rain and push button values
+  rain_or_skidding();
 
   //Print every 0.1 second, argument milliseconds of frequency
   poll_motor_spd(100);
@@ -73,12 +117,41 @@ void loop()
   //Print every 1 second, argument milliseconds of frequency
   print_status(1000); 
 
-  
+  control_pump(mode);
+
+}
+void rain_or_skidding()
+{
+  rain_value = analogRead(RAIN_PIN);
+
+  if(rain_value > RAIN_THRESHOLD)inflate_check = true;
+  if(digitalRead(PUSH_PIN)== HIGH)inflate_check = true;
+  delay(100); //Software debounce for push button
   
 }
-void()
+boolean control_pump(int set_mode)
 {
-  receive 
+  if(inflate_check == true)
+  {
+    if(set_mode < 1)
+    {
+      analogWrite(E1,200);
+      return false;
+    }
+    else inflate_check == false;
+  }
+  else 
+  {
+    analogWrite(E1,0);
+    return true;
+  }
+}
+int bluetooth_receive()
+{
+  if(BTSerial.available()>0)
+  {
+    return int(BTSerial.read());
+  }
 }
 void poll_motor_spd(int poll_every_x_millis)
 {
@@ -93,7 +166,7 @@ void poll_motor_spd(int poll_every_x_millis)
 }
 void simulate_motor_spd(boolean constant_speed_check)
 {
-  if(constant_speed_check == true) analogWrite(E2,150);
+  if(constant_speed_check == true) analogWrite(E2,100);
   else
   {
     analogWrite(E2,desired_spd);//desired_spd);
@@ -111,6 +184,9 @@ void print_status(int print_every_x_millis)
     
     Serial.print("      Encoder:");
     Serial.print(encoded_position);
+
+    Serial.print("      Bluetooth's mode:");
+    Serial.print(mode);
     
     last_print_time = millis();
     Serial.print("      Time:");

@@ -45,15 +45,19 @@ void loop()
 }
 void remap()
 {
-  c1 = map(pwm_value1,1100,1900,100,-100);//Left Right
+  c1 = map(pwm_value1,1100,1900,100,0);//Left Right
   c2 = map(pwm_value2,1050,1900,100,-100);//Forward Reverse
 }
 void translator()
 {
   power = max_speed * abs(c2)/100;
 
-  if(c1<=51) c1 = map(c1,0,51,51,0);
-  else C1
+  if(c1<=51) 
+  {
+    
+    c1 = map(c1,0,50,0,100);
+  }
+  else c1 = 
   left_power = power * c1 / 100;
   right_power = power - left_power;
   
