@@ -50,7 +50,7 @@ void remap()
 }
 void translator()
 {
-  int forward_threshold_pc = 45
+  int forward_threshold_pc = 45;
   power = max_speed * abs(c2)/100;
 
   left_power = power;
@@ -58,12 +58,12 @@ void translator()
   if(c1<=forward_threshold_pc) //Turn left
   {
     c1 = map(c1,0,45,0,100);
-    left_power = power * c1; //Slow down left
+    left_power = power * c1/100; //Slow down left
   }
   else if(c1 <= (100 - forward_threshold_pc)) //turn right
   {
     c1 = map((c1-50),0,45,0,100);
-    right_power = power * c1;//Slow down right
+    right_power = power * c1/100;//Slow down right
   }
   
   
