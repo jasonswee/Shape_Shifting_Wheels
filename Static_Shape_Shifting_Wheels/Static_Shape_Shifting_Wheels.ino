@@ -13,7 +13,7 @@ SoftwareSerial BTSerial(10, 11); //RX,TX
 #define BLUETOOTH_SPEED 9600
 
 //LED Strip Settinga
-#define LED_pin 11
+#define LED_pin 3
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LED_pin);
 
 //Set the encoder pins below
@@ -33,7 +33,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LED_pin);
 //Set pushbutton pin
 #define PUSH_PIN 7
 
-Encoder myEnc(ENCODER_PINA, ENCODER_PINB); //Set pins for encoder
+//Encoder myEnc(ENCODER_PINA, ENCODER_PINB); //Set pins for encoder
 
 //State
 int state = 0; 
@@ -63,7 +63,7 @@ unsigned long last_print_time = 0;
 int inflate_mode = 0;
 
 //Romeo's LED
-//int ledPin = 13;
+int ledpin = 13;
 
 //***Obsolete variables***
 //int count = 0;
@@ -85,7 +85,7 @@ void setup()
   
   // Add your initialization code here
   Serial.begin(9600);
-  
+  BTSerial.begin(9600);
   //Needed for print
   last_print_time = millis();
   
@@ -107,6 +107,7 @@ void setup()
 
   //LED
   pinMode(LED_pin,OUTPUT);
+  pinMode(ledpin,OUTPUT);
   strip.begin();
   strip.show(); // Initialize all pixels to 'off
 
@@ -123,14 +124,14 @@ void loop()
   Is_mode_inflated(); //reads flex sensor reading and checks if fully inflated
   if (state == 0)
   {
-    run_motor(0); //Input speed of motor
+    run_motor(170); //Input speed of motor
     run_pump(0); //Input speed of pump
   }
   //Simulate changing speed
   else if(state == 1)
   {
-    run_motor(0);
-    run_pump(255);
+    run_motor(170); //Input speed of motor
+    run_pump(150);
   }
 
   //LED
@@ -140,7 +141,7 @@ void loop()
   mode = bluetooth_receive();
   
   //Print every 1 second, argument milliseconds of frequency
-  print_status(1000); 
+  print_status(500); 
   
   //***Obsolete code ***
   //Print every 0.1 second, argument milliseconds of frequency
@@ -154,6 +155,7 @@ void Is_inflate_checked()
 {
   read_user_command();
   if (inflate_check == true) state = 1;
+  else state = 0;
 }
 void Is_mode_inflated()
 {
@@ -176,7 +178,7 @@ void Is_mode_inflated()
 }
 void read_user_command()
 {
-  rain_value = analogRead(A0);
+  rain_value = analogRead(RAIN_PIN);
 
   button_status = digitalRead(PUSH_PIN);
   if(rain_value < RAIN_THRESHOLD){
@@ -191,7 +193,9 @@ int bluetooth_receive()
 {
   if(BTSerial.available()>0)
   {
-    return int(BTSerial.read());
+    int error_check = int(BTSerial.read());
+    if (error_check>1)return int(mode);
+    else return error_check;
   }
 }
 
@@ -214,8 +218,8 @@ void print_status(int print_every_x_millis)
   if(millis()- last_print_time >= print_every_x_millis)
   {
     
-//    Serial.print("Rain value: ");
-//    Serial.println(rain_value);
+    Serial.print("Rain value: ");
+    Serial.println(rain_value);
 //
 //    Serial.print("Velocity:");
 //    Serial.print(velocity);
@@ -226,8 +230,15 @@ void print_status(int print_every_x_millis)
 //    Serial.print("      Bluetooth's mode:");
 //    Serial.print(mode);
 //
-//    Serial.print("      Push button status:");
-//    Serial.print(button_status);
+    
+    Serial.print("      Push button status:");
+    Serial.print(button_status);
+
+    Serial.print("      Mode:");
+    Serial.print(mode);
+
+    Serial.print("      State:");
+    Serial.print(state);
     
     last_print_time = millis();
     Serial.print("      Time:");
@@ -237,14 +248,26 @@ void print_status(int print_every_x_millis)
 
 void LED_code(){
   
-  if (mode == 0 && state == 1){ //tyre not fully inflated and pump activated
-    lighting(0,255,0,25);
-  }
-  else if (mode == 1 && state == 0){ //tyre fully inflated and pump not activated
-    lighting(0,0,255,25);
+//  if (mode == 0 && state == 1){ //tyre not fully inflated and pump activated
+//    lighting(0,255,0,25);
+//  }
+//  else if (mode == 1 && state == 0){ //tyre fully inflated and pump not activated
+//    lighting(0,0,255,25);
+//  }
+//  else{
+//    lighting(255,0,0,25);
+  if (state == 0){
+    if (mode > 0){;
+      lighting(0,0,255,25); // blue
+    }
+    else{
+      lighting(255,0,0,25); //red
+    }
   }
   else{
-    lighting(255,0,0,25);
+    if (inflate_check == true){
+      lighting(0,255,0,25); // green
+    }
   }
 }
 
